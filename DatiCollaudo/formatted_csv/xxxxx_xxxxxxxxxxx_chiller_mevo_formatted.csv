@@ -1,0 +1,17 @@
+TIME;2025-05-06T09:10:30+02:00;
+EVENT;;
+TempMandata;19.0;'C
+TempRitorno;20.2;'C
+VersioneSoftware1;3;
+VersioneSoftware2;0;
+VersioneSoftware3;15;
+TempAcs;0.0;'C
+Alta_Pressione;11.6;bar
+Bassa_Pressione;6.1;bar
+PosValvola;439;stps
+VelCompressore;37.7;rps
+Portata_ACS;0.0;l/h
+Portata_Impianto;2610.0;l/h
+VersioneOS_1;6;
+VersioneOS_2;0;
+VersioneOS_3;4;
