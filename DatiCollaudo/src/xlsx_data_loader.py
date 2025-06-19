@@ -1,5 +1,5 @@
 from pathlib import Path
-from xlsx_layout_creator import xlsx_template_creator
+from xlsx_layout_creator import xlsx_MEVO_template_creator
 from openpyxl import load_workbook
 import re
 
@@ -18,17 +18,7 @@ for current_file in directory.iterdir():
     if(current_file.suffix == '.csv'):
         print(f'\n\nPreparazione del file {current_file.name} in corso......')
         current_filename = current_file.name.removesuffix('.csv')
-        xlsx_template = open(xlsx_template_creator(current_filename, final_directory.name))
         current_csv = current_file.open()
-
-        wb = load_workbook(xlsx_template.name)
-        ws = wb.active
-        merged_cells_ranges = {}
-
-        for merged_range in ws.merged_cells.ranges:
-            merged_range_parts = str(merged_range).split(':')
-            if len(merged_range_parts) < 2 : merged_range_parts.append(merged_range_parts[0])
-            merged_cells_ranges[merged_range_parts[0]] = merged_range_parts[1]
 
         #Raccolta dati
 
@@ -74,6 +64,31 @@ for current_file in directory.iterdir():
             version_num = version_num[:-1]
 
             csv_data[key] = version_num
+        
+
+        is_pump_acs_installed = False
+        for key, value in csv_data.items():
+            key = ''.join(ch if ch.isalnum() else '' for ch in key).lower()
+            if key.find('pompa') != -1 and key.find('acs') != -1 and key.find('installata') != -1:
+                value = value.replace('\n','').replace('\r','').strip()
+                if value == '1' or value == 1:
+                    is_pump_acs_installed = True
+                    break
+                else:
+                    is_pump_acs_installed = False
+                    break
+
+
+        xlsx_template = open(xlsx_MEVO_template_creator(current_filename, final_directory.name, is_pump_acs_installed))
+
+        wb = load_workbook(xlsx_template.name)
+        ws = wb.active
+        merged_cells_ranges = {}
+
+        for merged_range in ws.merged_cells.ranges:
+            merged_range_parts = str(merged_range).split(':')
+            if len(merged_range_parts) < 2 : merged_range_parts.append(merged_range_parts[0])
+            merged_cells_ranges[merged_range_parts[0]] = merged_range_parts[1]
 
         percentage_to_add = 100 / len(csv_data)
         complete_percentage = 0
@@ -100,12 +115,20 @@ for current_file in directory.iterdir():
                 if re.search(r':\s*$', ws[first_merged_col_address].value): continue
                 if last_merged_col_address[0] == template_end_col: continue
                 can_put_data = True
+                
 
                 for field_part in field_to_search:
                     if not(re.search(rf'\b{field_part}', ws[first_merged_col_address].value.lower())):
                         can_put_data = False
                         break
                 if not(can_put_data): continue
+
+                if ws[first_merged_col_address].value.lower().find('verifica') != -1:
+                    value = value.replace('\n','').replace('\r','').strip()
+                    if value == '0' or value == 0:
+                        value = 'No'
+                    elif value == '1'or value == 1:
+                        value = 'Si'
 
                 next_merged_cell_address = chr(ord(last_merged_col_address[0]) + 1) + last_merged_col_address[1:]
                 while ord(next_merged_cell_address[0]) < ord(template_end_col):
